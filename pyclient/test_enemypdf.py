@@ -13,7 +13,7 @@ pdf.decrease(47, 12)
 pdf.decrease(2, 70)
 pdf.scan_decrease(70, 20)
 
-for i in range(60):
+for i in range(10):
     for j in range(6):
         pdf.decrease(*pdf.next_scan())
     pdf.spread_mass()
@@ -27,5 +27,6 @@ print pdf.next_hit()
 print pdf.next_hit()
 print pdf.next_hit()
 print pdf.next_hit()
+print pdf.next_hits(num_hits = 10)
 
 pdf.show()

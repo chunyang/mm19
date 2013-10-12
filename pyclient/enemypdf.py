@@ -124,35 +124,45 @@ class EnemyPDF(object):
 
         return (best_x+1, best_y+1)
 
-    def next_hit(self):
+    def next_hits(self, num_hits=1):
         """Return most probable cell"""
 
-        ys = range(100)
-        random.shuffle(ys)
-        xs_even = range(100)[::2]
-        xs_odd = range(100)[1::2]
-        random.shuffle(xs_even)
-        random.shuffle(xs_odd)
+        hits = np.tile(np.array([46, 46]), (num_hits, 1))
+        bests = np.ndarray.flatten(np.tile(-1, (num_hits, 1)))
 
-        best = float('-inf')
-        best_x = 46
-        best_y = 46
+        for i in range(num_hits):
+            ys = range(100)
+            random.shuffle(ys)
+            xs_even = range(100)[::2]
+            xs_odd = range(100)[1::2]
+            random.shuffle(xs_even)
+            random.shuffle(xs_odd)
 
-        for y in ys:
-            if y % 2:
-                xs = xs_odd
-            else:
-                xs = xs_even
+            for y in ys:
+                if y % 2:
+                    xs = xs_odd
+                else:
+                    xs = xs_even
 
-            for x in xs:
-                val = self.grid[y, x]
+                for x in xs:
+                    val = self.grid[y, x]
 
-                if val > best + 1E-11:
-                    best = val
-                    best_x = x
-                    best_y = y
+                    comp = val - 1E-11 > bests
+                    if np.any(comp):
+                        idx = np.nonzero(comp)[0][0]
+                        bests[idx] = val
+                        hits[idx, :] = np.array([x, y])
 
-        return (best_x, best_y)
+                        # Sort best hits
+                        sort_idx = np.argsort(bests)
+                        bests = bests[sort_idx]
+                        hits = hits[sort_idx, :]
+
+        print hits
+        return [(hits[i, 0], hits[i, 1]) for i in range(num_hits)]
+
+    def next_hit(self):
+        return self.next_hits()[0]
 
     def show(self):
         print self.grid
