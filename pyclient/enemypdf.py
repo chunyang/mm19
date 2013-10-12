@@ -91,15 +91,15 @@ class EnemyPDF(object):
         # Compute cumulative sum (should be 10000)
         # print np.sum(self.grid)
 
-    def next_scan(self):
+    def next_scan(self, dim=5):
         """Return most probable 5x5 area"""
 
         integral = np.cumsum(np.cumsum(self.grid, axis=0), axis=1)
 
-        ys = range(100-5)
+        ys = range(100-dim)
         random.shuffle(ys)
-        xs_even = range(100-5)[::2]
-        xs_odd = range(100-5)[1::2]
+        xs_even = range(100-dim)[::2]
+        xs_odd = range(100-dim)[1::2]
         random.shuffle(xs_even)
         random.shuffle(xs_odd)
 
@@ -114,8 +114,8 @@ class EnemyPDF(object):
                 xs = xs_even
 
             for x in xs:
-                val = integral[y+5, x+5] - integral[y+5, x] - \
-                        integral[y, x+5] + integral[y, x]
+                val = integral[y+dim, x+dim] - integral[y+dim, x] - \
+                        integral[y, x+dim] + integral[y, x]
 
                 if val > best + 1E-11:
                     best = val
