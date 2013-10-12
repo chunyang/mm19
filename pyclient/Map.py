@@ -1,3 +1,5 @@
+import numpy as np
+
 class Cell(object):
     """
     Map Cell
