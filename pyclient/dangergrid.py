@@ -11,12 +11,12 @@ class DangerGrid(object):
     GRID_SIZE = 100
 
     # Spatial variance
-    SIGMA_D = 5
-    VAR_D2 = 50
+    SIGMA_D = 3
+    VAR_D2 = 2 * SIGMA_D**2
 
     # Time variance
-    SIGMA_T = 3
-    VAR_T2 = 18
+    SIGMA_T = 2
+    VAR_T2 = 2 * SIGMA_T**2
 
     def __init__(self):
         self.grid = np.zeros((DangerGrid.GRID_SIZE, DangerGrid.GRID_SIZE))
