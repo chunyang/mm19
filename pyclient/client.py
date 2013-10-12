@@ -416,7 +416,7 @@ def generate_ships():
     ships = []
 
     # Grid for placing ships
-    ship_grid = np.zeros(100 * 100).reshape((100, 100))
+    ship_grid = np.zeros((100, 100))
 
     # Spacing to leave between ships
     buf = 4
