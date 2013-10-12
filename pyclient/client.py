@@ -234,19 +234,20 @@ class Client(object):
                             self.attack_queue.insert(0,attack_item)
                         break
 
-            if is_replay:
-                logging.debug("replay attack! %%%f",self.replay_rate)
-                logging.debug(self.replay_check_list)
+            # if is_replay:
+            #     logging.debug("replay attack! %%%f",self.replay_rate)
+            #     logging.debug(self.replay_check_list)
 
 
             # if we have leftover destroyers, attack most probable point
-            while len(destroyers) > 0 and self.resources >= 50:
+            numPossibleAttacks = min(len(destroyers),self.resources/50)
+            start_time = time.time()
+            coords = self.enemypdf.next_hits(numPossibleAttacks)
+            end_time = time.time()
+            logging.debug("Elapsed time was %g seconds" % (end_time - start_time))
+            for i in range(numPossibleAttacks):
                 d = destroyers.pop(0)
-                start_time = time.time()
-                # x,y = self.enemypdf.next_hit()
-                x,y = (random.randint(0,99),random.randint(0,99))
-                end_time = time.time()
-                logging.debug("Elapsed time was %g seconds" % (end_time - start_time))
+                x,y = coords[i]
                 d.fire(x,y)
                 self.resources -= 50
 
