@@ -127,39 +127,27 @@ class EnemyPDF(object):
     def next_hits(self, num_hits=1):
         """Return most probable cell"""
 
-        hits = np.tile(np.array([46, 46]), (num_hits, 1))
-        bests = np.ndarray.flatten(np.tile(-1, (num_hits, 1)))
+        vals = []
 
-        for i in range(num_hits):
-            ys = range(100)
-            random.shuffle(ys)
-            xs_even = range(100)[::2]
-            xs_odd = range(100)[1::2]
-            random.shuffle(xs_even)
-            random.shuffle(xs_odd)
+        ys = range(100)
+        random.shuffle(ys)
+        xs_even = range(100)[::2]
+        xs_odd = range(100)[1::2]
+        random.shuffle(xs_even)
+        random.shuffle(xs_odd)
 
-            for y in ys:
-                if y % 2:
-                    xs = xs_odd
-                else:
-                    xs = xs_even
+        for y in ys:
+            if y % 2:
+                xs = xs_odd
+            else:
+                xs = xs_even
 
-                for x in xs:
-                    val = self.grid[y, x]
+            for x in xs:
+                val = self.grid[y, x]
+                vals.append((val, x, y))
 
-                    comp = val - 1E-11 > bests
-                    if np.any(comp):
-                        idx = np.nonzero(comp)[0][0]
-                        bests[idx] = val
-                        hits[idx, :] = np.array([x, y])
-
-                        # Sort best hits
-                        sort_idx = np.argsort(bests)
-                        bests = bests[sort_idx]
-                        hits = hits[sort_idx, :]
-
-        print hits
-        return [(int(hits[i, 0]), int(hits[i, 1])) for i in range(num_hits)]
+        return [(x[1], x[2]) for x in
+                sorted(vals, key=lambda x: -x[0])[0:num_hits]]
 
     def next_hit(self):
         return self.next_hits()[0]
