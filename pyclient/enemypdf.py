@@ -131,8 +131,8 @@ class EnemyPDF(object):
         random.shuffle(ys)
         xs_even = range(100)[::2]
         xs_odd = range(100)[1::2]
-        random.shuffle(xs.even)
-        random.shuffle(xs.odd)
+        random.shuffle(xs_even)
+        random.shuffle(xs_odd)
 
         best = float('-inf')
         best_x = 46
