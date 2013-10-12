@@ -48,13 +48,16 @@ class Ship(object):
         self.orient = orient
 
     def set_action(self, action, x, y):
-        if action == "N":
+        if self.action == "N":
             self.action = action
             self.actionX = x
             self.actionY = y
             return True
         else:
             return False
+
+    def has_work(self):
+        return self.action != "N"
 
     def clear_action(self):
         self.action = "N"
