@@ -56,7 +56,7 @@ class Ship(object):
     def occupied_cells(self):
         if self.orient == "V":
             return map(lambda y: (self.y + y, self.x), range(self.get_ship_length()))
-        else if self.orient == "H":
+        elif self.orient == "H":
             return map(lambda x: (self.y, self.x + x), range(self.get_ship_length()))
         else:
             raise ValueError("Unknown Orientation")
@@ -80,7 +80,7 @@ class Ship(object):
     def move(self, x, y, orient):
         if orient == "V":
             self.action = "MV"
-        else if orient == "H":
+        elif orient == "H":
             self.action = "MH"
         else:
             raise ValueError("Unknown Orientation")
@@ -93,13 +93,14 @@ class MainShip(Ship):
     """
     Main Ship Class
     """
-    def __init__ (self, x, y, orient, ID):
+    def __init__ (self, x, y, orient, ID=-1):
         Ship.__init__(self, x, y, orient, ID, 60)
 
     def get_ship_type(self):
         return 'M'
 
-    def get_ship_length(self):
+    @staticmethod
+    def get_ship_length():
         return 5
 
     def fire(self, x, y):
@@ -111,13 +112,14 @@ class Destroyer(Ship):
     """
     Destroyer Ship Class
     """
-    def __init__ (self, x, y, orient, ID):
+    def __init__ (self, x, y, orient, ID=-1):
         Ship.__init__(self, x, y, orient, ID, 40)
 
     def get_ship_type(self):
         return 'D'
 
-    def get_ship_length(self):
+    @staticmethod
+    def get_ship_length():
         return 4
 
     def fire(self, x, y):
@@ -134,13 +136,14 @@ class Pilot(Ship):
     """
     Pilot Ship Class
     """
-    def __init__ (self, x, y, orient, ID):
+    def __init__ (self, x, y, orient, ID=-1):
         Ship.__init__(self, x, y, orient, ID, 40)
 
     def get_ship_type(self):
         return 'P'
 
-    def get_ship_length(self):
+    @staticmethod
+    def get_ship_length():
         return 2
 
     def sonar(self, x, y):
