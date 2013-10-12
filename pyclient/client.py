@@ -129,25 +129,66 @@ class Client(object):
         """
         Process a reply from the server.
 
-        This method could use a lot more intelligence. As is, it ignores almost
-        everything in the reply payload.
-
         reply -- The reply dictionary to process
         setup (default=False) -- Whether this is a new server connection
         """
-        if reply['error']:
-            logging.warn("Problem with last transmit: %s", reply['error'])
-            return
         if setup:
             self.token = reply['playerToken']
-        self.resources = reply['resources']
+
+        # Error
+        if reply['error']:
+            logging.warn('Problems with last transmit:')
+            for error in reply['error']:
+                logging.warn("    %s", error)
+                return
+            logging.warn('End errors')
+
+        # Response code
+        logging.debug("Response code: %d", reply['responseCode'])
+
+        # Resources
+        if reply['resources']:
+            self.resources = reply['resources']
+
+        # Ships
+        if reply['ships']:
+            for ship in reply['ships']:
+                # ship['health']
+                # ship['ID']
+                # ship['type']
+                # ship['xCoord']
+                # ship['yCoord']
+                # ship['orientation']
+                pass
+
+        # Ship action results
+        if reply['shipActionResults']:
+            for action in reply['shipActionResults']:
+                # action['ID']
+                # action['result']
+                pass
+
+        # Hit report
+        if reply['hitReport']:
+            for hit in reply['hitReport']:
+                # hit['xCoord']
+                # hit['yCoord']
+                # hit['hit']
+                pass
+
+        # Ping report
+        if reply['pingReport']:
+            for ping in reply['pingReport']:
+                # ping['shipID']
+                # ping['distance']
+                pass
 
 def main():
     establish_logger(logging.DEBUG)
     ships = generate_ships()
 
     # TODO (competitors): Change the client name, update ship positions, etc.
-    client = Client("localhost", 6969, "Whatever it's 2009")
+    client = Client("localhost", 6969, "Cache Me if You Can")
     client.connect()
     client.prep_game(ships)
     # TODO (competitors): make your game do something now!
@@ -156,7 +197,8 @@ def main():
 
 def establish_logger(loglevel):
     logging.basicConfig(format="%(asctime)s %(message)s",
-            datefmt='%m/%d/%Y %I:%M:%S %p', level=loglevel)
+            datefmt='%I:%M:%S %p', level=loglevel)
+            # datefmt='%m/%d/%Y %I:%M:%S %p', level=loglevel)
     logging.debug("Logger initialized")
 
 def generate_ships():
