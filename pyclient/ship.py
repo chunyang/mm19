@@ -53,6 +53,14 @@ class Ship(object):
     def get_id(self):
         return self.ID
 
+    def occupied_cells(self):
+        if self.orient == "V":
+            return map(lambda y: (self.y + y, self.x), range(self.get_ship_length()))
+        else if self.orient == "H":
+            return map(lambda x: (self.y, self.x + x), range(self.get_ship_length()))
+        else:
+            raise ValueError("Unknown Orientation")
+
     def getInitJSON(self):
         try:
             ship_type = self.get_ship_type()
@@ -72,9 +80,9 @@ class Ship(object):
     def move(self, x, y, orient):
         if orient == "V":
             self.action = "MV"
-        else if orient == "H"
+        else if orient == "H":
             self.action = "MH"
-        else
+        else:
             raise ValueError("Unknown Orientation")
 
         self.actionX = x
@@ -91,6 +99,9 @@ class MainShip(Ship):
     def get_ship_type(self):
         return 'M'
 
+    def get_ship_length(self):
+        return 5
+
     def fire(self, x, y):
         self.action = "F"
         self.actionX = x
@@ -105,6 +116,9 @@ class Destroyer(Ship):
 
     def get_ship_type(self):
         return 'D'
+
+    def get_ship_length(self):
+        return 4
 
     def fire(self, x, y):
         self.action = "F"
@@ -125,6 +139,9 @@ class Pilot(Ship):
 
     def get_ship_type(self):
         return 'P'
+
+    def get_ship_length(self):
+        return 2
 
     def sonar(self, x, y):
         self.action = "S"
