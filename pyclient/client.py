@@ -14,6 +14,7 @@ import time
 import numpy as np
 from ship import *
 from Map import Map
+from bomber import BomberStrategy
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
@@ -70,6 +71,8 @@ class Client(object):
         self.my_map = Map(100, 100)
         self.attack_report = []
 
+        self.strat = BomberStrategy(0,0,100,100)
+
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -118,6 +121,7 @@ class Client(object):
             # Step 1: Construct a turn payload
 
 
+            self.strat.job_assign(self.ships, 6)
 
             # send payload
             payload = {'playerToken': self.token}
