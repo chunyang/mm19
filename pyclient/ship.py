@@ -3,6 +3,8 @@
 # Copyright (c) 2013 Association for Computing Machinery at the University
 # of Illinois, Urbana-Champaign. Inherits license from main MechMania 19 code.
 
+import abc
+
 class Ship(object):
     """
     Really bare bones ship class.
@@ -31,8 +33,13 @@ class Ship(object):
         """
         return self.ID < other.ID
 
+    @abc.abstractmethod
     def get_ship_type(self):
         raise ValueError("No Ship Type")
+
+    @abc.abstractmethod
+    def get_ship_length(self):
+        raise ValueError("No Ship Length")
 
     def update(self, health, x, y, orient):
         self.health = health
@@ -96,7 +103,8 @@ class MainShip(Ship):
     def __init__ (self, x, y, orient, ID=-1):
         Ship.__init__(self, x, y, orient, ID, 60)
 
-    def get_ship_type(self):
+    @staticmethod
+    def get_ship_type():
         return 'M'
 
     @staticmethod
@@ -115,7 +123,8 @@ class Destroyer(Ship):
     def __init__ (self, x, y, orient, ID=-1):
         Ship.__init__(self, x, y, orient, ID, 40)
 
-    def get_ship_type(self):
+    @staticmethod
+    def get_ship_type():
         return 'D'
 
     @staticmethod
@@ -139,7 +148,8 @@ class Pilot(Ship):
     def __init__ (self, x, y, orient, ID=-1):
         Ship.__init__(self, x, y, orient, ID, 40)
 
-    def get_ship_type(self):
+    @staticmethod
+    def get_ship_type():
         return 'P'
 
     @staticmethod

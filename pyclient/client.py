@@ -9,7 +9,9 @@ import logging
 import random
 import socket
 
-from ship import Ship
+import numpy as np
+
+from ship import *
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
@@ -202,14 +204,55 @@ def establish_logger(loglevel):
     logging.debug("Logger initialized")
 
 def generate_ships():
-    """This generates ships non-strategically for testing purposes."""
-    # Let's get some ships
+    """Generate ships strategically"""
     ships = []
-    ships.append(Ship("M", 5, 5, "H"))
-    ships.append(Ship.random_ship("D"))
-    ships.append(Ship.random_ship("D"))
-    ships.append(Ship.random_ship("P"))
-    ships.append(Ship.random_ship("P"))
+
+    # Grid for placing ships
+    ship_grid = np.zeros(100 * 100).reshape((100, 100))
+
+    # Spacing to leave between ships
+    buf = 2
+
+    def get_free_position(length):
+        while True:
+            x, y = (np.random.randint(100 - length + 1),
+                    np.random.randint(100 - length + 1))
+            orient = ['H', 'V'][np.random.randint(2)]
+
+            if orient == 'H':
+                x_min = x - buf
+                x_max = x + length + buf
+                y_min = y - buf
+                y_max = y + buf
+                if np.all(ship_grid[y_min:y_max][:, x_min:x_max] == 0):
+                    ship_grid[y][x:(x+length)] = 1
+                    return (x, y, orient)
+            else:   # orient == 'V'
+                x_min = x - buf
+                x_max = x + buf
+                y_min = y - buf
+                y_max = y + length + buf
+                if np.all(ship_grid[y_min:y_max][:, x_min:x_max] == 0):
+                    ship_grid[y:(y+length)][:, x] = 1
+                    return (x, y, orient)
+
+    # Place main ship
+    x, y, orient = get_free_position(5)
+    ships.append(MainShip(x, y, orient))
+
+    # Place other ships
+    num_ships = 18
+    num_destroyer = 6
+    num_pilot = num_ships - num_destroyer
+
+    for destroyer in range(num_destroyer):
+        x, y, orient = get_free_position(4)
+        ships.append(Destroyer(x, y, orient))
+
+    for pilot in range(num_pilot):
+        x, y, orient = get_free_position(2)
+        ships.append(Pilot(x, y, orient))
+
     return ships
 
 if __name__ == "__main__":
