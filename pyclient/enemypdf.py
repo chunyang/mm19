@@ -103,7 +103,6 @@ class EnemyPDF(object):
         random.shuffle(xs_even)
         random.shuffle(xs_odd)
 
-        repeat = 0
         best = float('-inf')
         best_x = 46
         best_y = 46
@@ -124,6 +123,36 @@ class EnemyPDF(object):
                     best_y = y
 
         return (best_x+1, best_y+1)
+
+    def next_hit(self):
+        """Return most probable cell"""
+
+        ys = range(100)
+        random.shuffle(ys)
+        xs_even = range(100)[::2]
+        xs_odd = range(100)[1::2]
+        random.shuffle(xs.even)
+        random.shuffle(xs.odd)
+
+        best = float('-inf')
+        best_x = 46
+        best_y = 46
+
+        for y in ys:
+            if y % 2:
+                xs = xs_odd
+            else:
+                xs = xs_even
+
+            for x in xs:
+                val = self.grid[y, x]
+
+                if val > best + 1E-11:
+                    best = val
+                    best_x = x
+                    best_y = y
+
+        return (best_x, best_y)
 
     def show(self):
         print self.grid
