@@ -31,13 +31,14 @@ class BomberStrategy(object):
     def job_assign(self, ships, attack_num):
         for ship in ships:
             if ship.get_ship_type() == "D" or ship.get_ship_type() == "M":
-                ship.fire(self.dq[-1][0][0], self.dq[-1][0][1])
-                self.dq[-1] = (self.dq[-1][0], self.dq[-1][1] -1)
-                attack_num -= 1
-                if self.dq[-1][1] == 0:
-                    self.dq.pop()
-                if attack_num == 0:
-                    return
+                if ship.action == "N":
+                    ship.fire(self.dq[-1][0][0], self.dq[-1][0][1])
+                    self.dq[-1] = (self.dq[-1][0], self.dq[-1][1] -1)
+                    attack_num -= 1
+                    if self.dq[-1][1] == 0:
+                        self.dq.pop()
+                    if attack_num == 0:
+                        return
 
 def main():
     import numpy as np
