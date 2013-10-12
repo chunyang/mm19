@@ -23,4 +23,9 @@ print pdf.next_scan()
 print pdf.next_scan()
 print pdf.next_scan()
 
+print pdf.next_hit()
+print pdf.next_hit()
+print pdf.next_hit()
+print pdf.next_hit()
+
 pdf.show()
