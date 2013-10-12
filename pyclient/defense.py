@@ -33,6 +33,8 @@ class RunOnDetection(object):
             if ship is self.ship_to_move:
                 move_location = my_map.find_best_location(ship.get_ship_length())
                 ship.move(*move_location)
+                return 50 * ship.get_ship_length()
+        return 0
 
 def locate_main_ship(ships):
     for ship in ships:

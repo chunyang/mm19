@@ -142,7 +142,7 @@ class Client(object):
 
             if(self.defense.update(self.ships, reply["hitReport"], reply["pingReport"])):
                 self.last_special = "M"
-            self.defense.job_assign(self.ships, self.my_map)
+            self.resources -= self.defense.job_assign(self.ships, self.my_map)
 
             # self.strat.job_assign(self.ships, 6)
 
@@ -151,21 +151,31 @@ class Client(object):
             destroyers = [x for x in available_ships if x.get_ship_type() == 'D']
             pilots = [x for x in available_ships if x.get_ship_type() == 'P']
 
-            # Process a move request
-            # TODO
+            # always make sure there is enough resource to move main ship next round
+            if (len(pilots) < 5):
+                self.resources -= (5 - len(pilots)) * 50
 
             # Process a burst request
             if len(self.burst_queue) > 0:
                 if len(destroyers) > 0:
-                    if self.last_special == None:
+                    if self.last_special == None and self.resources >= 250:
                         x,y = self.burst_queue.pop(0)
                         destroyer = destroyers.pop(0)
                         destroyer.burst_fire(x,y)
                         self.last_special = "B"
+                        self.resources -= 250
+            elif self.resources > 2500:
+                if len(destroyers) > 0:
+                    if self.last_special == None and self.resources >= 250:
+                        x,y = self.enemypdf.next_hit()
+                        destroyer = destroyers.pop(0)
+                        destroyer.burst_fire(x,y)
+                        self.last_special = "B"
+                        self.resources -= 250
 
             # Process a scan request
             if self.last_special == None:
-                if len(pilots) > 0:
+                if len(pilots) > 0 and self.resources >= 110:
                     x,y = self.enemypdf.next_scan()
                     pilot = pilots.pop(0)
                     pilot.sonar(x,y)
@@ -173,31 +183,35 @@ class Client(object):
                     logging.debug("Next scan: (%s)",(x,y))
                     self.last_special = "S"
                     self.last_scan = (x,y)
+                    self.resources -= 110
 
             # Process attack request
-            if mainship.action == "N":
+            if mainship.action == "N" and self.resources >= 50:
                 destroyers.append(mainship)
+                self.resources -= 50
 
             while len(self.attack_queue) > 0:
                 attack_item = self.attack_queue.pop(0)
                 x,y = attack_item.coord
-                while len(destroyers) > 0 and attack_item.nAttacks > 0:
+                while len(destroyers) > 0 and attack_item.nAttacks > 0 and self.resources >= 50:
                     d = destroyers.pop(0)
                     d.fire(x,y)
+                    self.resources -= 50
                     attack_item.nAttacks -= 1
 
                 # ran out of destroyers
-                if len(destroyers) == 0:
+                if len(destroyers) == 0 or self.resources < 50:
                     # didn't get to finish the attack
                     if attack_item.nAttacks > 0:
                         self.attack_queue.insert(0,attack_item)
                     break
 
             # if we have leftover destroyers, attack most probable point
-            while len(destroyers) > 0:
+            while len(destroyers) > 0 and self.resources >= 50:
                 d = destroyers.pop(0)
                 x,y = self.enemypdf.next_hit()
                 d.fire(x,y)
+                self.resources -= 50
 
             # send payload
             payload = {'playerToken': self.token}
@@ -348,7 +362,7 @@ class Client(object):
                     self.attack_queue.insert(0,AttackItem((x,y),6))
                 if ping['distance'] <= 1:
                     # burst center and attack around it
-                    # self.burst_queue.insert(0,(x,y))
+                    self.burst_queue.insert(0,(x,y))
                     if x-1 >= MIN_X:
                         if y-1 >= MIN_Y:
                             self.attack_queue.append(AttackItem((x-1,y-1),nAttacks))
@@ -450,7 +464,7 @@ def generate_ships():
 
     # Number of other ships
     num_ships = 18
-    num_destroyer = 7
+    num_destroyer = 8
     num_pilot = num_ships - num_destroyer
 
     for destroyer in range(num_destroyer):
