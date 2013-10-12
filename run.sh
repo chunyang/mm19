@@ -1,2 +1,2 @@
 #!/bin/bash
-python pyclient/client.py
+python2 pyclient/client.py

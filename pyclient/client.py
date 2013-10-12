@@ -174,6 +174,8 @@ class Client(object):
         # Ships
         if reply['ships']:
             for ship in reply['ships']:
+                logging.debug("ID: %d\tt: %c\tx: %d\t y: %d", ship['ID'],
+                        ship['type'], ship['xCoord'], ship['yCoord'])
                 # ship['health']
                 # ship['ID']
                 # ship['type']
