@@ -298,18 +298,18 @@ def generate_ships():
             orient = ['H', 'V'][np.random.randint(2)]
 
             if orient == 'H':
-                x_min = x - buf
-                x_max = x + length + buf
-                y_min = y - buf
-                y_max = y + buf
+                x_min = max(x - buf, 0)
+                x_max = min(x + length + buf, 100)
+                y_min = max(y - buf, 0)
+                y_max = min(y + buf, 100)
                 if np.all(ship_grid[y_min:y_max][:, x_min:x_max] == 0):
                     ship_grid[y][x:(x+length)] = 1
                     return (x, y, orient)
             else:   # orient == 'V'
-                x_min = x - buf
-                x_max = x + buf
-                y_min = y - buf
-                y_max = y + length + buf
+                x_min = max(x - buf, 0)
+                x_max = min(x + buf, 100)
+                y_min = max(y - buf, 0)
+                y_max = min(y + length + buf, 100)
                 if np.all(ship_grid[y_min:y_max][:, x_min:x_max] == 0):
                     ship_grid[y:(y+length)][:, x] = 1
                     return (x, y, orient)
