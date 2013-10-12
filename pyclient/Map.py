@@ -16,6 +16,10 @@ class Map(object):
     def __init__(self, xdim, ydim):
         self.xdim = xdim
         self.ydim = ydim
+        self.fire_rate = []
+        self.fire_histo = []
+        self.fire_scatter = []
+        self.enemy_profile = set()
         self.__list__ = [ [Cell() for i in xrange(xdim)] for j in xrange(ydim) ]
 
     def __getitem__(self, key):
@@ -55,3 +59,30 @@ class Map(object):
             for ship in ShipArray:
                 if ship.ID == scan["shipID"]:
                     map(lambda x: self.__list__[x[0]][x[1]].scanned.append(turn), ship.occupied_cells())
+
+    def find_best_location(self, length):
+        buf = 4
+        while True:
+            x, y = (np.random.randint(100 - length + 1),
+                    np.random.randint(100 - length + 1))
+            orient = ['H', 'V'][np.random.randint(2)]
+            found = True
+            if orient == 'H':
+                x_min = x - buf
+                x_max = x + length + buf
+                y_min = y - buf
+                y_max = y + buf
+            else:   # orient == 'V'
+                x_min = x - buf
+                x_max = x + buf
+                y_min = y - buf
+                y_max = y + length + buf
+
+            for yy in xrange(y_min, y_max):
+                for xx in xrange(x_min, x_max):
+                    if self.__list__[yy][xx].ship:
+                        found = False
+
+            if found:
+                return (x, y, orient)
+
