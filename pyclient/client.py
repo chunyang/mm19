@@ -200,7 +200,7 @@ class Client(object):
 
             is_replay = np.random.random() < self.replay_rate
             if is_replay:
-                logging.debug(self.replay_stack)
+                # logging.debug(self.replay_stack)
                 while self.replay_stack.size() > 0:
                     attack_item = self.replay_stack.pop()
                     x,y = attack_item.coord
@@ -420,24 +420,29 @@ class Client(object):
                 if ping['distance'] <= 1:
                     # burst center and attack around it
                     self.burst_queue.insert(0,(x,y))
-                    if x-1 >= MIN_X:
-                        if y-1 >= MIN_Y:
-                            self.attack_queue.append(AttackItem((x-1,y-1),nAttacks))
-                        if y+1 <= MAX_Y:
-                            self.attack_queue.append(AttackItem((x-1,y+1),nAttacks))
-                    if x+1 <= MAX_X:
-                        if y-1 >= MIN_Y:
-                            self.attack_queue.append(AttackItem((x+1,y-1),nAttacks))
-                        if y+1 <= MAX_Y:
-                            self.attack_queue.append(AttackItem((x+1,y+1),nAttacks))
+                    # if x-1 >= MIN_X:
+                    #     if y-1 >= MIN_Y:
+                    #         self.attack_queue.append(AttackItem((x-1,y-1),nAttacks))
+                    #     if y+1 <= MAX_Y:
+                    #         self.attack_queue.append(AttackItem((x-1,y+1),nAttacks))
+                    # if x+1 <= MAX_X:
+                    #     if y-1 >= MIN_Y:
+                    #         self.attack_queue.append(AttackItem((x+1,y-1),nAttacks))
+                    #     if y+1 <= MAX_Y:
+                    #         self.attack_queue.append(AttackItem((x+1,y+1),nAttacks))
+                    for i in range(max(x-1,MIN_X),min(x+1,MAX_X)):
+                        for j in range(max(y-1,MIN_Y),min(y+1,MAX_Y)):
+                            if (i==max(x-1,MIN_X)) or (i==min(x+1,MAX_X)) \
+                                or (j==max(y-1,MIN_Y)) or (j==min(y+1,MAX_Y)):
+                                self.attack_queue.append(AttackItem((i,j),nAttacks))
+
                 if ping['distance'] <= 2:
                     # attack around the outer ring
                     for i in range(max(x-2,MIN_X),min(x+2,MAX_X)):
                         for j in range(max(y-2,MIN_Y),min(y+2,MAX_Y)):
                             if (i==max(x-2,MIN_X)) or (i==min(x+2,MAX_X)) \
                                 or (j==max(y-2,MIN_Y)) or (j==min(y+2,MAX_Y)):
-                                if i%2==0 and j%2==0:
-                                    self.attack_queue.append(AttackItem((i,j),nAttacks))
+                                self.attack_queue.append(AttackItem((i,j),nAttacks))
 
         # redistribute the enemy pdf
         # logging.debug("Checking last_special: %s",str(self.last_special))
