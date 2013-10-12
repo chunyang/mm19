@@ -115,6 +115,38 @@ class Map(object):
             if len(self.__list__[hit["yCoord"]][hit["xCoord"]].fired) != 0:
                 habitual_offender = True
 
+        # time space correlation
+        strong_ts_correlation = False
+        for hit in reply["hitReport"]:
+            xCoord = hit["xCoord"]
+            yCoord = hit["yCoord"]
+            x_min = max(xCoord - 5, 0)
+            x_max = min(xCoord + 5, 100)
+            y_min = max(yCoord - 5, 0)
+            y_max = min(yCoord + 5, 100)
+            turn_old = turn - 10
+            for y in xrange(y_max - y_min):
+                for x in xrange(x_max - x_min):
+                    fired = self.__list__[y+y_min][x+x_min].fired
+                    if len(fired) != 0 and fired[-1][0] >= turn_old:
+                        strong_ts_correlation = True
+
+        # hit scan correlation
+        strong_hs_correlation = False
+        for hit in reply["hitReport"]:
+            xCoord = hit["xCoord"]
+            yCoord = hit["yCoord"]
+            x_min = max(xCoord - 5, 0)
+            x_max = min(xCoord + 5, 100)
+            y_min = max(yCoord - 5, 0)
+            y_max = min(yCoord + 5, 100)
+            turn_old = turn - 2
+            for y in xrange(y_max - y_min):
+                for x in xrange(x_max - x_min):
+                    scanned = self.__list__[y+y_min][x+x_min].scanned
+                    if len(scanned) != 0 and scanned[-1] >= turn_old:
+                        strong_hs_correlation = True
+
         # set profiler
         if fire_histo >= 4:
             self.enemy_profile |= set("destroyer killer")
@@ -125,6 +157,12 @@ class Map(object):
         if habitual_offender:
             self.enemy_profile |= set("habitual offender")
             self.enemy_profile_detail["habitual offender"] = turn
+        if strong_hs_correlation:
+            self.enemy_profile |= set("hit scan correlation")
+            self.enemy_profile_detail["hit scan correlation"] = turn
+        if strong_ts_correlation:
+            self.enemy_profile |= set("time space correlation")
+            self.enemy_profile_detail["time space correlation"] = turn
 
         # reset the profile if the behavier is not observed in 200 turn
         for key, value in self.enemy_profile_detail.items():

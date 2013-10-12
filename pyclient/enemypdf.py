@@ -159,7 +159,7 @@ class EnemyPDF(object):
                         hits = hits[sort_idx, :]
 
         print hits
-        return [(hits[i, 0], hits[i, 1]) for i in range(num_hits)]
+        return [(int(hits[i, 0]), int(hits[i, 1])) for i in range(num_hits)]
 
     def next_hit(self):
         return self.next_hits()[0]
