@@ -30,16 +30,23 @@ class Map(object):
         # update with current ship location
         map(self.add_ship, ShipArray)
 
+
     def add_ship(self, ship):
-        map(self.set_location_occupy, ship.occupied_cells())
+        if (self.test_add_ship(ship)):
+            map(self.set_location_occupy, ship.occupied_cells())
+        else:
+            raise ValueError("Ship Overlap")
 
     def set_location_occupy(self, loc):
         y = loc[0]
         x = loc[1]
-        if self.__list__[y][x].ship:
-            raise ValueError("Ship Overlap")
-        else:
-            self.__list__[y][x].ship = True
+        self.__list__[y][x].ship = True
+
+    def test_add_ship(self, ship):
+        return all(map(self.test_location_occupy, ship.occupied_cells()))
+
+    def test_location_occupy(self, loc):
+        return not self.__list__[loc[0]][loc[1]].ship
 
     def update_cell_history(self, turn, reply, ShipArray):
         for hit in reply["hitReport"]:
