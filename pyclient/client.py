@@ -146,8 +146,8 @@ class Client(object):
 
             # self.strat.job_assign(self.ships, 6)
 
-            available_ships = self.ships
-            mainship = [x for x in available_ships if x.get_ship_type() == 'M'][0]
+            available_ships = [x for x in self.ships if x.has_work() == False]
+            mainship = [x for x in self.ships if x.get_ship_type() == 'M'][0]
             destroyers = [x for x in available_ships if x.get_ship_type() == 'D']
             pilots = [x for x in available_ships if x.get_ship_type() == 'P']
 
