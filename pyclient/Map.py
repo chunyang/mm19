@@ -71,15 +71,15 @@ class Map(object):
             orient = ['H', 'V'][np.random.randint(2)]
             found = True
             if orient == 'H':
-                x_min = x - buf
-                x_max = x + length + buf
-                y_min = y - buf
-                y_max = y + buf
+                x_min = max(x - buf, 0)
+                x_max = min(x + length + buf, 100)
+                y_min = max(y - buf, 0)
+                y_max = min(y + buf, 100)
             else:   # orient == 'V'
-                x_min = x - buf
-                x_max = x + buf
-                y_min = y - buf
-                y_max = y + length + buf
+                x_min = max(x - buf, 0)
+                x_max = min(x + buf, 100)
+                y_min = max(y - buf, 0)
+                y_max = min(y + length + buf, 100)
 
             for yy in xrange(y_min, y_max):
                 for xx in xrange(x_min, x_max):
