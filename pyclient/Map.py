@@ -167,4 +167,4 @@ class Map(object):
         # reset the profile if the behavier is not observed in 200 turn
         for key, value in self.enemy_profile_detail.items():
             if turn - value > 200:
-                self.enemy_profile -= key
+                self.enemy_profile -= set(key)
