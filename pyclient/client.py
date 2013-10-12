@@ -280,7 +280,7 @@ def generate_ships():
     ship_grid = np.zeros(100 * 100).reshape((100, 100))
 
     # Spacing to leave between ships
-    buf = 2
+    buf = 4
 
     def get_free_position(length):
         while True:
