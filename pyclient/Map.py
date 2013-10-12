@@ -95,15 +95,18 @@ class Map(object):
         self.max_fire = max(fire_rate, self.max_fire)
         self.fire_rate.append(fire_rate)
         # max fire in one location in a single round
-        fire_histo = dict()
-        for fire in reply["hitReport"]:
-            try:
-                histo = fire_histo[frozenset(fire)]
-            except KeyError:
-                fire_histo[frozenset(fire)] = 1
-            else:
-                fire_histo[frozenset(fire)] = histo + 1
-        self.fire_histo.append(max(fire_histo.values()))
+        if fire_rate != 0:
+            fire_histo = dict()
+            for fire in reply["hitReport"]:
+                try:
+                    histo = fire_histo[frozenset(fire)]
+                except KeyError:
+                    fire_histo[frozenset(fire)] = 1
+                else:
+                    fire_histo[frozenset(fire)] = histo + 1
+            self.fire_histo.append(max(fire_histo.values()))
+        else:
+            self.fire_histo.append(0)
         # repeat hit
         habitual_offender = False
         for hit in reply["hitReport"]:
@@ -111,14 +114,14 @@ class Map(object):
                 habitual_offender = True
 
         # set profiler
-        if fire_histo > 4:
-            self.enemy_profile |= "destroyer killer"
+        if fire_histo >= 4:
+            self.enemy_profile |= set("destroyer killer")
             self.enemy_profile_detail["destroyer killer"] = turn
-        if fire_histo > 6:
-            self.enemy_profile |= "mainship killer"
+        if fire_histo >= 6:
+            self.enemy_profile |= set("mainship killer")
             self.enemy_profile_detail["mainship killer"] = turn
         if habitual_offender:
-            self.enemy_profile |= "habitual offender"
+            self.enemy_profile |= set("habitual offender")
             self.enemy_profile_detail["habitual offender"] = turn
 
         # reset the profile if the behavier is not observed in 200 turn
