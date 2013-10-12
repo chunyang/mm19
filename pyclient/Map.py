@@ -16,10 +16,12 @@ class Map(object):
     def __init__(self, xdim, ydim):
         self.xdim = xdim
         self.ydim = ydim
+        self.max_fire = 0
         self.fire_rate = []
         self.fire_histo = []
         self.fire_scatter = []
         self.enemy_profile = set()
+        self.enemy_profile_detail = dict()
         self.__list__ = [ [Cell() for i in xrange(xdim)] for j in xrange(ydim) ]
 
     def __getitem__(self, key):
@@ -53,6 +55,7 @@ class Map(object):
         return not self.__list__[loc[0]][loc[1]].ship
 
     def update_cell_history(self, turn, reply, ShipArray):
+        self.charactorize_enemy(turn, reply)
         for hit in reply["hitReport"]:
             self.__list__[hit["yCoord"]][hit["xCoord"]].fired.append((turn, hit["hit"]));
         for scan in reply["pingReport"]:
@@ -86,3 +89,39 @@ class Map(object):
             if found:
                 return (x, y, orient)
 
+    def charactorize_enemy(self, turn, reply):
+        # fire rate
+        fire_rate = len(reply["hitReport"])
+        self.max_fire = max(fire_rate, self.max_fire)
+        self.fire_rate.append(fire_rate)
+        # max fire in one location in a single round
+        fire_histo = dict()
+        for fire in reply["hitReport"]:
+            try:
+                histo = fire_histo[frozenset(fire)]
+            except KeyError:
+                fire_histo[frozenset(fire)] = 1
+            else:
+                fire_histo[frozenset(fire)] = histo + 1
+        self.fire_histo.append(max(fire_histo.values()))
+        # repeat hit
+        habitual_offender = False
+        for hit in reply["hitReport"]:
+            if len(self.__list__[hit["yCoord"]][hit["xCoord"]].fired) != 0:
+                habitual_offender = True
+
+        # set profiler
+        if fire_histo > 4:
+            self.enemy_profile |= "destroyer killer"
+            self.enemy_profile_detail["destroyer killer"] = turn
+        if fire_histo > 6:
+            self.enemy_profile |= "mainship killer"
+            self.enemy_profile_detail["mainship killer"] = turn
+        if habitual_offender:
+            self.enemy_profile |= "habitual offender"
+            self.enemy_profile_detail["habitual offender"] = turn
+
+        # reset the profile if the behavier is not observed in 200 turn
+        for key, value in self.enemy_profile_detail.items():
+            if turn - value > 200:
+                self.enemy_profile -= key
