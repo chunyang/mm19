@@ -8,11 +8,21 @@ import json
 import logging
 import random
 import socket
+import string
 
 from ship import Ship
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
+
+# SERVER RESPONSE CODES
+NOTIFY_RESPONSE_CODE = 100;
+SUCCESS_RESPONSE_CODE = 200;
+WARNING_RESPONSE_CODE = 201;
+ERROR_RESPONSE_CODE = 400;
+INTERRUPT_RESPONSE_CODE = 418;
+WIN_RESPONSE_CODE = 9001;
+LOSS_RESPONSE_CODE = -1;
 
 class Client(object):
     """
@@ -81,9 +91,10 @@ class Client(object):
 
         # Step 2: Transmit the payload and receive the reply
         logging.info("Transmitting start package to server...")
-        reply = self._send_payload(payload)
+        self._send_payload(payload)
 
         # Step 3: Process the reply
+        reply = self._get_reply()
         self._process_reply(reply, setup=True)
 
     def attack_forever(self):
@@ -100,21 +111,27 @@ class Client(object):
             payload['shipActions'] = []
 
             # Step 2: Transmit turn payload and wait for the reply
-            reply = self._send_payload(payload)
+            self._send_payload(payload)
 
-            # Step 3: Process the reply
+            # Step 3: Wait for turn response and process it
+            reply = self._get_reply()
+            self._process_reply(reply)
+
+            # Step 4: Wait for turn notification and process it
+            reply = self._get_reply()
             self._process_reply(reply)
 
     def _send_payload(self, payload):
         """
-        Send a payload to the server and return the deserialized reply.
+        Send a payload to the server
 
         payload -- Payload dictionary to send out.
-
-        Returns a dictionary with the reply data.
         """
+        logging.debug("Payload: %s", json.dumps(payload))
         # Send this information to the server
         self.sock.sendall(json.dumps(payload) + '\n')
+
+    def _get_reply(self):
         return json.loads(self.sock.recv(MAX_BUFFER))
 
     def _process_reply(self, reply, setup=False):
