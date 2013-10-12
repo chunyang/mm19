@@ -63,6 +63,8 @@ class Client(object):
         self.sock = None
         self.token = ""
         self.resources = 0
+        self.ships = []
+        self.attacked_coords = []
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -110,12 +112,21 @@ class Client(object):
             # Step 1: Construct a turn payload
             payload = {'playerToken': self.token}
             payload['shipActions'] = []
+            if len(self.attacked_coords) > 0:
+                # logging.debug("Dummy under attack!")
+                x = self.attacked_coords[0]['xCoord']
+                y = self.attacked_coords[0]['yCoord']
+                payload['shipActions'].append({"ID": 0, "actionID": "MV",
+                    "actionX": x, "actionY": y,
+                    "actionExtra": 0})
+                # logging.debug(payload)
 
             # Step 2: Transmit turn payload and wait for the reply
             self._send_payload(payload)
 
             # Step 3: Wait for turn response and process it
             reply = self._get_reply()
+            # logging.debug("Dummy reply: %s",reply)
             self._process_reply(reply)
 
             # Step 4: Wait for turn notification and process it
@@ -152,11 +163,16 @@ class Client(object):
             self.token = reply['playerToken']
         self.resources = reply['resources']
 
+        self.ships = []
         if reply['ships']:
             for ship in reply['ships']:
                 # logging.debug("ID: %d\tt: %c\tx: %d\t y: %d", ship['ID'],
                 #         ship['type'], ship['xCoord'], ship['yCoord'])
-                pass
+                self.ships.append(Ship(ship['type'],ship['xCoord'], \
+                    ship['yCoord'],ship['orientation'],ship['ID']))
+
+        if reply['hitReport']:
+            self.attacked_coords = reply['hitReport']
 
 def main():
     establish_logger(logging.DEBUG)

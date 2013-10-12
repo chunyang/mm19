@@ -20,6 +20,7 @@ from defense import RunOnDetection
 from enemypdf import EnemyPDF
 from dangergrid import DangerGrid
 from AttackItem import AttackItem
+from ReplayStack import ReplayStack
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
@@ -92,6 +93,11 @@ class Client(object):
         self.attack_queue = []
         self.burst_queue = []
 
+        # data for replay attacks
+        self.replay_rate = 0.03
+        self.replay_stack = ReplayStack(10)
+        self.replay_check_list = []
+
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
@@ -137,10 +143,10 @@ class Client(object):
             reply = self._get_reply()
             self._process_notification(reply, turn)
 
+
             logging.debug("===PlayerRequest===")
 
             # Step 1: Construct a turn payload
-
 
             if(self.defense.update(self.ships, reply["hitReport"], reply["pingReport"])):
                 self.last_special = "M"
@@ -181,8 +187,8 @@ class Client(object):
                     x,y = self.enemypdf.next_scan()
                     pilot = pilots.pop(0)
                     pilot.sonar(x,y)
-                    logging.debug("Setting last_special")
-                    logging.debug("Next scan: (%s)",(x,y))
+                    # logging.debug("Setting last_special")
+                    # logging.debug("Next scan: (%s)",(x,y))
                     self.last_special = "S"
                     self.last_scan = (x,y)
                     self.resources -= 110
@@ -192,28 +198,58 @@ class Client(object):
                 destroyers.append(mainship)
                 self.resources -= 50
 
-            while len(self.attack_queue) > 0:
-                attack_item = self.attack_queue.pop(0)
-                x,y = attack_item.coord
-                while len(destroyers) > 0 and attack_item.nAttacks > 0 and self.resources >= 50:
-                    d = destroyers.pop(0)
-                    d.fire(x,y)
-                    self.resources -= 50
-                    attack_item.nAttacks -= 1
+            is_replay = np.random.random() < self.replay_rate
+            if is_replay:
+                logging.debug(self.replay_stack)
+                while self.replay_stack.size() > 0:
+                    attack_item = self.replay_stack.pop()
+                    x,y = attack_item.coord
+                    while len(destroyers) > 0 and attack_item.nAttacks > 0 and self.resources >= 50:
+                        d = destroyers.pop(0)
+                        d.fire(x,y)
+                        self.replay_check_list.append(AttackItem((x,y),1))
+                        self.resources -= 50
+                        attack_item.nAttacks -= 1
 
-                # ran out of destroyers
-                if len(destroyers) == 0 or self.resources < 50:
-                    # didn't get to finish the attack
-                    if attack_item.nAttacks > 0:
-                        self.attack_queue.insert(0,attack_item)
-                    break
+                    # ran out of destroyers
+                    if len(destroyers) == 0 or self.resources < 50:
+                        # didn't get to finish the attack
+                        if attack_item.nAttacks > 0:
+                            self.replay_stack.push(attack_item)
+                        break
+            else:
+                while len(self.attack_queue) > 0:
+                    attack_item = self.attack_queue.pop(0)
+                    x,y = attack_item.coord
+                    while len(destroyers) > 0 and attack_item.nAttacks > 0 and self.resources >= 50:
+                        d = destroyers.pop(0)
+                        d.fire(x,y)
+                        self.resources -= 50
+                        attack_item.nAttacks -= 1
+
+                    # ran out of destroyers
+                    if len(destroyers) == 0 or self.resources < 50:
+                        # didn't get to finish the attack
+                        if attack_item.nAttacks > 0:
+                            self.attack_queue.insert(0,attack_item)
+                        break
+
+            if is_replay:
+                logging.debug("replay attack! %%%f",self.replay_rate)
+                logging.debug(self.replay_check_list)
+
 
             # if we have leftover destroyers, attack most probable point
             while len(destroyers) > 0 and self.resources >= 50:
                 d = destroyers.pop(0)
-                x,y = self.enemypdf.next_hit()
+                start_time = time.time()
+                # x,y = self.enemypdf.next_hit()
+                x,y = (random.randint(0,99),random.randint(0,99))
+                end_time = time.time()
+                logging.debug("Elapsed time was %g seconds" % (end_time - start_time))
                 d.fire(x,y)
                 self.resources -= 50
+
 
             # send payload
             payload = {'playerToken': self.token}
@@ -296,7 +332,7 @@ class Client(object):
                 self.danger_grid.get_danger(self.ships[0]))
 
         # reset variables
-        logging.debug("Resetting last_special")
+        # logging.debug("Resetting last_special")
         self.last_special = None
 
     def _process_reply(self, reply, setup=False):
@@ -351,14 +387,28 @@ class Client(object):
             for hit in reply['hitReport']:
                 x = hit['xCoord']
                 y = hit['yCoord']
+                # Check if it was replay attack
+                is_replay = False
+                if sum(cq.coord == (x,y) for cq in self.replay_check_list) > 0:
+                    is_replay = True
+                    self.replay_check_list.remove([cq for cq in self.replay_check_list if cq.coord == (x,y)][0])
+                else:
+                    self.replay_stack.push(AttackItem((x,y),6))
+
                 # if hit, hit again until we miss
                 if hit['hit'] == True:
                     self.attack_queue.insert(0,AttackItem((x,y),nAttacks))
+                    if is_replay:
+                        self.replay_rate *= 3
                 # if not hit, we know the tile is clear; update pdf
                 else:
                     self.enemypdf.decrease(x,y)
+                    # add the attack to the replay queue for surprise attacks
+                    if is_replay:
+                        self.replay_rate /= 2
 
-        logging.debug(self.attack_queue)
+
+        # logging.debug(self.attack_queue)
 
         if reply['pingReport']:
             for ping in reply['pingReport']:
@@ -389,9 +439,9 @@ class Client(object):
                                     self.attack_queue.append(AttackItem((i,j),nAttacks))
 
         # redistribute the enemy pdf
-        logging.debug("Checking last_special: %s",str(self.last_special))
+        # logging.debug("Checking last_special: %s",str(self.last_special))
         if self.last_special == "S":
-            logging.debug("scan_decrease")
+            # logging.debug("scan_decrease")
             x,y = self.last_scan
             self.enemypdf.scan_decrease(x,y)
 

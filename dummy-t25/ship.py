@@ -17,11 +17,12 @@ class Ship(object):
     stupid. I'm sorry.
     """
 
-    def __init__(self, ship_type, x, y, orient):
+    def __init__(self, ship_type, x, y, orient, ID=0):
       self.ship_type = ship_type
       self.x = x
       self.y = y
       self.orient = orient
+      self.ID = ID
 
     def getJSON(self):
       """Return the JSON dictionary representation of the ship."""
