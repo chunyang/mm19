@@ -18,6 +18,7 @@ from bomber import BomberStrategy
 from defense import RunOnDetection
 
 from enemypdf import EnemyPDF
+from dangergrid import DangerGrid
 from AttackItem import AttackItem
 
 # TODO (competitors): This is arbitrary but should be large enough
@@ -85,6 +86,7 @@ class Client(object):
         self.defense = RunOnDetection(self.ships)
 
         self.enemypdf = EnemyPDF()
+        self.danger_grid = DangerGrid()
         self.last_scan = (0,0)
         self.last_special = None
         self.attack_queue = []
@@ -288,6 +290,9 @@ class Client(object):
         # update Map
         self.my_map.update_ship_location(self.ships)
         self.my_map.update_cell_history(turn, reply, self.ships)
+        self.danger_grid.update(turn, self.my_map)
+        logging.debug("MainShip Danger: %g",
+                self.danger_grid.get_danger(self.ships[0]))
 
         # reset variables
         logging.debug("Resetting last_special")
