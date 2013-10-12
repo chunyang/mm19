@@ -12,6 +12,7 @@ import string
 
 import numpy as np
 from ship import *
+from Map import Map
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
@@ -63,6 +64,10 @@ class Client(object):
         self.sock = None
         self.token = ""
         self.resources = 0
+        self.ships = None
+
+        self.my_map = Map(100, 100)
+        self.attack_report = []
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -94,29 +99,28 @@ class Client(object):
         logging.info("Transmitting start package to server...")
         self._send_payload(payload)
 
-        # Step 3: Process the reply
-        reply = self._get_reply()
-        self._process_reply(reply, setup=True)
 
-    def attack_forever(self):
+    def loop_round(self):
         """
         This method does nothing remotely reasonable.
 
         If you want a picture of the future, imagine a boot stomping on a
         nautical battleground--forever.
         """
+        turn = 0
         self.alive = True
         while(self.alive):
+            # Step 0: Wait for turn notification and process it
+            reply = self._get_reply()
+            self._process_notification(reply, turn)
+
             # Step 1: Construct a turn payload
+
+
+
+            # send payload
             payload = {'playerToken': self.token}
-            # TODO (competitors): You might want to actually keep track of which
-            # ships are which
-            shipactions = [{'ID': shipid, 'actionID': "S",
-                # 'actionX': random.randint(0,99),
-                'actionX': 7,
-                # 'actionY': random.randint(0,99),
-                'actionY': 7,
-                'actionExtra': 0} for shipid in range(5)]
+            shipactions = map(lambda x: x.getActionJSON(), self.ships)
             payload['shipActions'] = shipactions
 
             # Step 2: Transmit turn payload and wait for the reply
@@ -127,9 +131,7 @@ class Client(object):
             reply = self._get_reply()
             self._process_reply(reply)
 
-            # Step 4: Wait for turn notification and process it
-            reply = self._get_reply()
-            self._process_reply(reply)
+            turn += 1
 
     def _send_payload(self, payload):
         """
@@ -145,6 +147,50 @@ class Client(object):
         reply = self.sock.recv(MAX_BUFFER)
         logging.debug("Reply: %s\n",reply)
         return json.loads(reply)
+
+    def _process_notification(self, reply, turn, setup=False):
+        """
+        Process a reply from the server.
+
+        reply -- The reply dictionary to process
+        setup (default=False) -- Whether this is a new server connection
+        """
+        if setup:
+            self.token = reply['playerToken']
+
+        # Error
+        if reply['error']:
+            logging.warn('Problems with last transmit:')
+            for error in reply['error']:
+                logging.warn("    %s", error)
+                return
+            logging.warn('End errors')
+
+        # Response code
+        logging.debug("Response code: %d", reply['responseCode'])
+
+        # Resources
+        if reply['resources']:
+            self.resources = reply['resources']
+
+        # Ships
+        if reply['ships']:
+            self.ships = []
+            for ship in reply['ships']:
+                ship_type = ship['type']
+                del ship['type']
+                if ship_type == "M":
+                    self.ships.append(MainShip(**ship))
+                elif ship_type == "P":
+                    self.ships.append(Pilot(**ship))
+                elif ship_type == "D":
+                    self.ships.append(Destroyer(**ship))
+                else:
+                    pass
+
+        # update Map
+        self.my_map.update_ship_location(self.ships)
+        self.my_map.update_cell_history(turn, reply, self.ships)
 
     def _process_reply(self, reply, setup=False):
         """
@@ -208,14 +254,14 @@ class Client(object):
 
 def main():
     establish_logger(logging.DEBUG)
-    ships = generate_ships()
 
     # TODO (competitors): Change the client name, update ship positions, etc.
     client = Client("localhost", 6969, "Cache Me if You Can")
+    client.ships = generate_ships()
     client.connect()
-    client.prep_game(ships)
+    client.prep_game(client.ships)
     # TODO (competitors): make your game do something now!
-    client.attack_forever()
+    client.loop_round()
 
 
 def establish_logger(loglevel):

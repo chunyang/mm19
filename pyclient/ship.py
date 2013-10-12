@@ -100,8 +100,8 @@ class MainShip(Ship):
     """
     Main Ship Class
     """
-    def __init__ (self, x, y, orient, ID=-1):
-        Ship.__init__(self, x, y, orient, ID, 60)
+    def __init__ (self, xCoord, yCoord, orientation, ID=-1, health=60):
+        Ship.__init__(self, xCoord, yCoord, orientation, ID, health)
 
     @staticmethod
     def get_ship_type():
@@ -120,8 +120,8 @@ class Destroyer(Ship):
     """
     Destroyer Ship Class
     """
-    def __init__ (self, x, y, orient, ID=-1):
-        Ship.__init__(self, x, y, orient, ID, 40)
+    def __init__ (self, xCoord, yCoord, orientation, ID=-1, health=40):
+        Ship.__init__(self, xCoord, yCoord, orientation, ID, health)
 
     @staticmethod
     def get_ship_type():
@@ -145,8 +145,8 @@ class Pilot(Ship):
     """
     Pilot Ship Class
     """
-    def __init__ (self, x, y, orient, ID=-1):
-        Ship.__init__(self, x, y, orient, ID, 40)
+    def __init__ (self, xCoord, yCoord, orientation, ID=-1, health=20):
+        Ship.__init__(self, xCoord, yCoord, orientation, ID, health)
 
     @staticmethod
     def get_ship_type():
