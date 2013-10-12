@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 class Cell(object):
     """
@@ -8,6 +9,7 @@ class Cell(object):
         self.ship = False
         self.fired = []
         self.scanned = []
+        self.danger = 0
 
 
 class Map(object):
@@ -22,7 +24,7 @@ class Map(object):
         self.fire_rate = []
         self.fire_histo = []
         self.fire_scatter = []
-        self.enemy_profile = set()
+        self.enemy_profile = []
         self.enemy_profile_detail = dict()
         self.__list__ = [ [Cell() for i in xrange(xdim)] for j in xrange(ydim) ]
 
@@ -88,6 +90,14 @@ class Map(object):
                     if self.__list__[yy][xx].ship:
                         found = False
 
+            if "time space correlation" in self.enemy_profile:
+                danger_sum = 0
+                for yy in xrange(y_min, y_max):
+                    for xx in xrange(x_min, x_max):
+                        danger_sum += self.__list__[yy][xx].danger
+                if danger_sum >= 5:
+                    found = False
+
             if found:
                 return (x, y, orient)
 
@@ -116,7 +126,7 @@ class Map(object):
                 habitual_offender = True
 
         # time space correlation
-        strong_ts_correlation = False
+        strong_ts_correlation = 0
         for hit in reply["hitReport"]:
             xCoord = hit["xCoord"]
             yCoord = hit["yCoord"]
@@ -129,7 +139,24 @@ class Map(object):
                 for x in xrange(x_max - x_min):
                     fired = self.__list__[y+y_min][x+x_min].fired
                     if len(fired) != 0 and fired[-1][0] >= turn_old:
-                        strong_ts_correlation = True
+                        strong_ts_correlation += 1
+
+        #reset danger
+        for y in xrange(100):
+            for x in xrange(100):
+                self.__list__[y][x].danger = 0
+        for hit in reply["hitReport"]:
+            xCoord = hit["xCoord"]
+            yCoord = hit["yCoord"]
+            x_min = max(xCoord - 5, 0)
+            x_max = min(xCoord + 5, 100)
+            y_min = max(yCoord - 5, 0)
+            y_max = min(yCoord + 5, 100)
+            turn_old = turn - 10
+            for y in xrange(y_max - y_min):
+                for x in xrange(x_max - x_min):
+                    danger = max(strong_ts_correlation - min(abs(xCoord - x_min - x), abs(yCoord - y_min - y)), 1)
+                    self.__list__[y+y_min][x+x_min].danger = danger
 
         # hit scan correlation
         strong_hs_correlation = False
@@ -149,22 +176,37 @@ class Map(object):
 
         # set profiler
         if fire_histo >= 4:
-            self.enemy_profile |= set("destroyer killer")
+            self.add_to_enemy_profile("destroyer killer")
             self.enemy_profile_detail["destroyer killer"] = turn
         if fire_histo >= 6:
-            self.enemy_profile |= set("mainship killer")
+            self.add_to_enemy_profile("mainship killer")
             self.enemy_profile_detail["mainship killer"] = turn
         if habitual_offender:
-            self.enemy_profile |= set("habitual offender")
+            self.add_to_enemy_profile("habitual offender")
             self.enemy_profile_detail["habitual offender"] = turn
         if strong_hs_correlation:
-            self.enemy_profile |= set("hit scan correlation")
+            self.add_to_enemy_profile("hit scan correlation")
             self.enemy_profile_detail["hit scan correlation"] = turn
         if strong_ts_correlation:
-            self.enemy_profile |= set("time space correlation")
+            self.add_to_enemy_profile("time space correlation")
             self.enemy_profile_detail["time space correlation"] = turn
 
         # reset the profile if the behavier is not observed in 200 turn
         for key, value in self.enemy_profile_detail.items():
-            if turn - value > 200:
-                self.enemy_profile -= set(key)
+            if turn - value > 50:
+                self.remove_from_enemy_profile(key)
+
+        logging.debug(self.enemy_profile)
+
+    def add_to_enemy_profile(self, name):
+        if name in self.enemy_profile:
+            return
+        else:
+            self.enemy_profile.append(name)
+
+    def remove_from_enemy_profile(self, name):
+        if name in self.enemy_profile:
+            self.enemy_profile.remove(name)
+        else:
+            return
+

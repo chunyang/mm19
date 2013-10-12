@@ -148,7 +148,7 @@ class Client(object):
 
             # Step 1: Construct a turn payload
 
-            if(self.defense.update(self.ships, reply["hitReport"], reply["pingReport"])):
+            if(self.defense.update(self.ships, reply["hitReport"], reply["pingReport"], self.my_map)):
                 self.last_special = "M"
             self.resources -= self.defense.job_assign(self.ships, self.my_map)
 
@@ -183,7 +183,7 @@ class Client(object):
 
             # Process a scan request
             if self.last_special == None:
-                if len(pilots) > 0 and self.resources >= 110:
+                if len(pilots) > 3 and self.resources >= 110:
                     x,y = self.enemypdf.next_scan()
                     pilot = pilots.pop(0)
                     pilot.sonar(x,y)
@@ -327,10 +327,10 @@ class Client(object):
         # update Map
         self.my_map.update_ship_location(self.ships)
         self.my_map.update_cell_history(turn, reply, self.ships)
-        self.danger_grid.update(turn, self.my_map)
-        logging.debug("Max Danger: %g", np.max(self.danger_grid.grid))
-        logging.debug("MainShip Danger: %g",
-                self.danger_grid.get_danger(self.ships[0]))
+        #self.danger_grid.update(turn, self.my_map)
+        #logging.debug("Max Danger: %g", np.max(self.danger_grid.grid))
+        #logging.debug("MainShip Danger: %g",
+        #        self.danger_grid.get_danger(self.ships[0]))
 
         # reset variables
         # logging.debug("Resetting last_special")
