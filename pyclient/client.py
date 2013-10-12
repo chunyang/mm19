@@ -16,6 +16,7 @@ from ship import *
 from Map import Map
 from bomber import BomberStrategy
 from defense import RunOnDetection
+from AttackItem import AttackItem
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
@@ -28,6 +29,12 @@ ERROR_RESPONSE_CODE = 400;
 INTERRUPT_RESPONSE_CODE = 418;
 WIN_RESPONSE_CODE = 9001;
 LOSS_RESPONSE_CODE = -1;
+
+# MAP CONSTANTS
+MIN_X = 0
+MIN_Y = 0
+MAX_X = 99
+MAX_Y = 99
 
 class Client(object):
     """
@@ -74,6 +81,10 @@ class Client(object):
 
         self.strat = BomberStrategy(0,0,100,100)
         self.defense = RunOnDetection(self.ships)
+        self.last_scan = (0,0)
+        self.last_special = None
+        self.attack_queue = []
+        self.burst_queue = []
 
     def connect(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -123,10 +134,54 @@ class Client(object):
             # Step 1: Construct a turn payload
 
 
-            self.defense.update(self.ships, reply["hitReport"], reply["pingReport"])
-            self.defense.job_assign(self.ships, self.my_map)
+            # self.defense.update(self.ships, reply["hitReport"], reply["pingReport"])
+            # self.defense.job_assign(self.ships, self.my_map)
 
-            self.strat.job_assign(self.ships, 6)
+            # self.strat.job_assign(self.ships, 6)
+
+            available_ships = self.ships
+            mainship = [x for x in available_ships if x.get_ship_type == 'M'][0]
+            destroyers = [x for x in available_ships if x.get_ship_type() == 'D']
+            pilots = [x for x in available_ships if x.get_ship_type() == 'P']
+
+            # Process a move request
+            # TODO
+
+            # Process a burst request
+            if burst_queue.count() > 0:
+                if destroyers.count() > 0:
+                    if last_special == None:
+                        x,y = burst_queue.pop(0)
+                        destroyer = destroyers.pop(0)
+                        destroyer.burst_fire(x,y)
+                        last_special = "B"
+
+            # Process a scan request
+            if last_special == None:
+                if pilots.count() > 0:
+                    x,y = enemypdf.next_scan()
+                    pilot = pilots.pop(0)
+                    pilot.sonar(x,y)
+                    last_special = "S"
+
+            # Process attack request
+            if mainship.action == "N":
+                destroyers.append(mainship)
+
+            while attack_queue.count() > 0:
+                attack_item = attack_queue.pop(0)
+                x,y = attack_item.coord
+                while destroyers.count() > 0 and attack_item.nAttacks > 0:
+                    d = destroyers.pop(0)
+                    d.fire(x,y)
+                    attack_item.nAttacks -= 1
+
+                # ran out of destroyers
+                if destroyers.count() == 0:
+                    # didn't get to finish the attack
+                    if attack_item.nAttacks > 0:
+                        attack_queue.insert(0,attack_item)
+                    break
 
             # send payload
             payload = {'playerToken': self.token}
@@ -178,6 +233,7 @@ class Client(object):
 
         # Response code
         logging.debug("Response code: %d", reply['responseCode'])
+        assert(reply['responseCode']==100)
 
         # Resources
         if reply['resources']:
@@ -201,6 +257,46 @@ class Client(object):
         # update Map
         self.my_map.update_ship_location(self.ships)
         self.my_map.update_cell_history(turn, reply, self.ships)
+
+        # update enemy pdf and queue attacks
+        nAttacks = 1 # unit number of attacks per tile
+        if reply['hitReport']:
+            for hit in reply['hitReport']:
+                x = hit['xCoord']
+                y = hit['yCoord']
+                # if hit, hit again until we miss
+                if hit['hit'] == True:
+                    attack_queue.insert(0,AttackItem((x,y),nAttacks))
+                # if not hit, we know the tile is clear; update pdf
+                else:
+                    enemypdf.decrease(x,y)
+
+        if reply['pingReport']:
+            for ping in reply['pingReport']:
+                x,y = last_scan
+                if ping['distance'] == 0:
+                    # priority attack at the coordinate
+                    attack_queue.insert(0,AttackItem((x,y),5))
+                if ping['distance'] <= 1:
+                    # burst center and attack around it
+                    burst_queue.insert(0,(x,y))
+                    # attack_queue.append(AttackItem((max(x-2,MIN_X),y),nAttacks))
+                    # attack_queue.append(AttackItem((min(x+2,MAX_X),y),nAttacks))
+                    # attack_queue.append(AttackItem((x,max(y-2,MIN_Y),nAttacks))
+                    # attack_queue.append(AttackItem((x,min(y+2,MAX_Y),nAttacks))
+                if ping['distance'] <= 2:
+                    # attack around the outer ring
+                    for i in range(max(x-2,MIN_X),min(x+2,MAX_X)):
+                        for j in range(max(y-2,MIN_Y),min(y+2,MAX_Y)):
+                            if (i==max(x-2,MIN_X)) or (i==min(x+2,MAX_X)) \
+                                or (j==max(y-2,MIN_Y)) or (j==min(y+2,MAX_Y)):
+                                attack_queue.append(AttackItem((i,j),nAttacks))
+                # redistribute the enemy pdf
+                if last_special == "S":
+                    enemypdf.scan_decrease(x,y)
+
+        enemypdf.spread_mass()
+        last_special = None
 
     def _process_reply(self, reply, setup=False):
         """
