@@ -72,9 +72,9 @@ class Ship(object):
     def move(self, x, y, orient):
         if orient == "V":
             self.action = "MV"
-        else if orient == "H"
+        elif orient == "H":
             self.action = "MH"
-        else
+        else:
             raise ValueError("Unknown Orientation")
 
         self.actionX = x

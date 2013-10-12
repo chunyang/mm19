@@ -1,2 +1,2 @@
 #!/bin/bash
-python client.py
+python dummyclient.py

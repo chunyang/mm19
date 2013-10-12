@@ -8,11 +8,21 @@ import json
 import logging
 import random
 import socket
+import string
 
-from ship import Ship
+from ship import *
 
 # TODO (competitors): This is arbitrary but should be large enough
 MAX_BUFFER = 65565
+
+# SERVER RESPONSE CODES
+NOTIFY_RESPONSE_CODE = 100;
+SUCCESS_RESPONSE_CODE = 200;
+WARNING_RESPONSE_CODE = 201;
+ERROR_RESPONSE_CODE = 400;
+INTERRUPT_RESPONSE_CODE = 418;
+WIN_RESPONSE_CODE = 9001;
+LOSS_RESPONSE_CODE = -1;
 
 class Client(object):
     """
@@ -76,14 +86,15 @@ class Client(object):
         payload = {'playerName': self.name}
         # TODO (competitors): This is really ugly because the main ship is
         # special cased. I'm sorry. Feel free to fix.
-        payload['mainShip'] = shiparray[0].getJSON()
-        payload['ships'] = [ship.getJSON() for ship in shiparray[1:]]
+        payload['mainShip'] = shiparray[0].getInitJSON()
+        payload['ships'] = [ship.getInitJSON() for ship in shiparray[1:]]
 
         # Step 2: Transmit the payload and receive the reply
         logging.info("Transmitting start package to server...")
-        reply = self._send_payload(payload)
+        self._send_payload(payload)
 
         # Step 3: Process the reply
+        reply = self._get_reply()
         self._process_reply(reply, setup=True)
 
     def attack_forever(self):
@@ -99,31 +110,40 @@ class Client(object):
             payload = {'playerToken': self.token}
             # TODO (competitors): You might want to actually keep track of which
             # ships are which
-            shipactions = [{'ID': shipid, 'actionID': "F",
-                'actionX': random.randint(0,99),
-                'actionY': random.randint(0,99),
+            shipactions = [{'ID': shipid, 'actionID': "S",
+                # 'actionX': random.randint(0,99),
+                'actionX': 7,
+                # 'actionY': random.randint(0,99),
+                'actionY': 7,
                 'actionExtra': 0} for shipid in range(5)]
             payload['shipActions'] = shipactions
 
             # Step 2: Transmit turn payload and wait for the reply
             logging.info("Sending turn...")
-            reply = self._send_payload(payload)
+            self._send_payload(payload)
 
-            # Step 3: Process the reply
+            # Step 3: Wait for turn response and process it
+            reply = self._get_reply()
+            self._process_reply(reply)
+
+            # Step 4: Wait for turn notification and process it
+            reply = self._get_reply()
             self._process_reply(reply)
 
     def _send_payload(self, payload):
         """
-        Send a payload to the server and return the deserialized reply.
+        Send a payload to the server
 
         payload -- Payload dictionary to send out.
-
-        Returns a dictionary with the reply data.
         """
         logging.debug("Payload: %s", json.dumps(payload))
         # Send this information to the server
         self.sock.sendall(json.dumps(payload) + '\n')
-        return json.loads(self.sock.recv(MAX_BUFFER))
+
+    def _get_reply(self):
+        reply = self.sock.recv(MAX_BUFFER)
+        logging.debug("Reply: %s\n",reply)
+        return json.loads(reply)
 
     def _process_reply(self, reply, setup=False):
         """
@@ -205,11 +225,8 @@ def generate_ships():
     """This generates ships non-strategically for testing purposes."""
     # Let's get some ships
     ships = []
-    ships.append(Ship("M", 5, 5, "H"))
-    ships.append(Ship.random_ship("D"))
-    ships.append(Ship.random_ship("D"))
-    ships.append(Ship.random_ship("P"))
-    ships.append(Ship.random_ship("P"))
+    ships.append(MainShip(5, 5, "H",0))
+    ships.append(Pilot(0,0,"H",0))
     return ships
 
 if __name__ == "__main__":
