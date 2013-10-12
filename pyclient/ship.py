@@ -48,9 +48,13 @@ class Ship(object):
         self.orient = orient
 
     def set_action(self, action, x, y):
-        self.action = action
-        self.actionX = x
-        self.actionY = y
+        if action == "N":
+            self.action = action
+            self.actionX = x
+            self.actionY = y
+            return True
+        else:
+            return False
 
     def clear_action(self):
         self.action = "N"
@@ -86,15 +90,11 @@ class Ship(object):
 
     def move(self, x, y, orient):
         if orient == "V":
-            self.action = "MV"
+            return self.set_action("MV", x, y)
         elif orient == "H":
-            self.action = "MH"
+            return self.set_action("MH", x, y)
         else:
             raise ValueError("Unknown Orientation")
-
-        self.actionX = x
-        self.actionY = y
-
 
 class MainShip(Ship):
     """
@@ -112,9 +112,7 @@ class MainShip(Ship):
         return 5
 
     def fire(self, x, y):
-        self.action = "F"
-        self.actionX = x
-        self.actionY = y
+        return self.set_action("F", x, y)
 
 class Destroyer(Ship):
     """
@@ -132,14 +130,10 @@ class Destroyer(Ship):
         return 4
 
     def fire(self, x, y):
-        self.action = "F"
-        self.actionX = x
-        self.actionY = y
+        return self.set_action("F", x, y)
 
     def burst_fire(self, x, y):
-        self.action = "B"
-        self.actionX = x
-        self.actionY = y
+        return self.set_action("B", x, y)
 
 class Pilot(Ship):
     """
@@ -157,6 +151,4 @@ class Pilot(Ship):
         return 2
 
     def sonar(self, x, y):
-        self.action = "S"
-        self.actionX = x
-        self.actionY = y
+        return self.set_action("S", x, y)
