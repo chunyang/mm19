@@ -291,6 +291,7 @@ class Client(object):
         self.my_map.update_ship_location(self.ships)
         self.my_map.update_cell_history(turn, reply, self.ships)
         self.danger_grid.update(turn, self.my_map)
+        logging.debug("Max Danger: %g", np.max(self.danger_grid.grid))
         logging.debug("MainShip Danger: %g",
                 self.danger_grid.get_danger(self.ships[0]))
 

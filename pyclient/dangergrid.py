@@ -22,6 +22,10 @@ class DangerGrid(object):
         self.grid = np.zeros((DangerGrid.GRID_SIZE, DangerGrid.GRID_SIZE))
 
     def update(self, turn, my_map):
+
+        # Reset grid
+        self.grid = np.zeros((DangerGrid.GRID_SIZE, DangerGrid.GRID_SIZE))
+
         for y in range(DangerGrid.GRID_SIZE):
             for x in range(DangerGrid.GRID_SIZE):
                 for t in my_map[y][x].fired[::-1]:
