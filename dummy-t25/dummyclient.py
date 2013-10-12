@@ -9,6 +9,7 @@ import logging
 import random
 import socket
 import string
+import numpy as np
 
 from ship import Ship
 
@@ -127,7 +128,7 @@ class Client(object):
 
         payload -- Payload dictionary to send out.
         """
-        logging.debug("Payload: %s", json.dumps(payload))
+        # logging.debug("Payload: %s", json.dumps(payload))
         # Send this information to the server
         self.sock.sendall(json.dumps(payload) + '\n')
 
@@ -153,8 +154,9 @@ class Client(object):
 
         if reply['ships']:
             for ship in reply['ships']:
-                logging.debug("ID: %d\tt: %c\tx: %d\t y: %d", ship['ID'],
-                        ship['type'], ship['xCoord'], ship['yCoord'])
+                # logging.debug("ID: %d\tt: %c\tx: %d\t y: %d", ship['ID'],
+                #         ship['type'], ship['xCoord'], ship['yCoord'])
+                pass
 
 def main():
     establish_logger(logging.DEBUG)
@@ -173,13 +175,55 @@ def establish_logger(loglevel):
             datefmt='%m/%d/%Y %I:%M:%S %p', level=loglevel)
 
 def generate_ships():
-    """This generates ships non-strategically for testing purposes."""
-    # Let's get some ships
+    """Generate ships strategically"""
     ships = []
-    ships.append(Ship("M", 5, 5, "H"))
-    ships.append(Ship("D", 5, 6, "H"))
-    ships.append(Ship("D", 5, 7, "H"))
-    ships.append(Ship("D" ,5, 8, "H"))
+
+    # Grid for placing ships
+    ship_grid = np.zeros(100 * 100).reshape((100, 100))
+
+    # Spacing to leave between ships
+    buf = 4
+
+    def get_free_position(length):
+        while True:
+            x, y = (np.random.randint(100 - length + 1),
+                    np.random.randint(100 - length + 1))
+            orient = ['H', 'V'][np.random.randint(2)]
+
+            if orient == 'H':
+                x_min = max(x - buf, 0)
+                x_max = min(x + length + buf, 100)
+                y_min = max(y - buf, 0)
+                y_max = min(y + buf, 100)
+                if np.all(ship_grid[y_min:y_max][:, x_min:x_max] == 0):
+                    ship_grid[y][x:(x+length)] = 1
+                    return (x, y, orient)
+            else:   # orient == 'V'
+                x_min = max(x - buf, 0)
+                x_max = min(x + buf, 100)
+                y_min = max(y - buf, 0)
+                y_max = min(y + length + buf, 100)
+                if np.all(ship_grid[y_min:y_max][:, x_min:x_max] == 0):
+                    ship_grid[y:(y+length)][:, x] = 1
+                    return (x, y, orient)
+
+    # Place main ship
+    x, y, orient = get_free_position(5)
+    ships.append(Ship("M",x, y, orient))
+
+    # Number of other ships
+    num_ships = 18
+    num_destroyer = 6
+    num_pilot = num_ships - num_destroyer
+
+    for destroyer in range(num_destroyer):
+        x, y, orient = get_free_position(4)
+        ships.append(Ship("D",x, y, orient))
+
+    for pilot in range(num_pilot):
+        x, y, orient = get_free_position(2)
+        ships.append(Ship("P",x, y, orient))
+
     return ships
 
 if __name__ == "__main__":

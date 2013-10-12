@@ -26,6 +26,8 @@ class RunOnDetection(object):
             if ship is not None and self.ship_to_move is None:
                 self.ship_to_move = ship
 
+        return self.ship_to_move is not None
+
     def job_assign(self, ships, my_map):
         for ship in ships:
             if ship is self.ship_to_move:

@@ -94,9 +94,9 @@ class Map(object):
         fire_rate = len(reply["hitReport"])
         self.max_fire = max(fire_rate, self.max_fire)
         self.fire_rate.append(fire_rate)
+        fire_histo = dict()
         # max fire in one location in a single round
         if fire_rate != 0:
-            fire_histo = dict()
             for fire in reply["hitReport"]:
                 try:
                     histo = fire_histo[frozenset(fire)]
