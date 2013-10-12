@@ -9,6 +9,7 @@ import logging
 import random
 import socket
 import string
+import time
 
 import numpy as np
 from ship import *
@@ -258,6 +259,7 @@ def main():
     # TODO (competitors): Change the client name, update ship positions, etc.
     client = Client("localhost", 6969, "Cache Me if You Can")
     client.ships = generate_ships()
+    #time.sleep(2)
     client.connect()
     client.prep_game(client.ships)
     # TODO (competitors): make your game do something now!
@@ -307,7 +309,7 @@ def generate_ships():
     x, y, orient = get_free_position(5)
     ships.append(MainShip(x, y, orient))
 
-    # Place other ships
+    # Number of other ships
     num_ships = 18
     num_destroyer = 6
     num_pilot = num_ships - num_destroyer
