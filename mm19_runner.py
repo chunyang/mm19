@@ -13,7 +13,7 @@ FNULL = open(os.devnull, 'w')
 PLAYERONESTDOUT = FNULL
 path, filename = os.path.split(os.path.abspath(__file__))
 dummy_player_path = \
-    path+'/dummy-t25'
+    path+'/dummy'
 
 
 def testGame(name, run_script):
@@ -45,11 +45,17 @@ def runGame(match_name, name1, name2, run_script1, run_script2):
         bot2.terminate()
     if ((bot1.poll() is None) or (bot2.poll() is None)):  # makes sure they die
         time.sleep(5)
-        if not bot1.poll():
-            bot1.kill()
-        if not bot2.poll():
-            bot2.kill()
-    with open(match_name) as f:
+
+            if not bot1.poll():
+                try:
+                    bot1.kill()
+                except OSError: pass
+            if not bot2.poll():
+                try:
+                    bot2.kill()
+                except OSError:
+                
+            with open(match_name) as f:
         winner = f.readlines()[-1].rstrip()
     # the winner is in last line of the output file
     print json.loads(winner)
@@ -105,7 +111,7 @@ def main():
         else:
             print "error can't find run.sh"
     else:
-        print "error can't find name.text"
+        print "error can't find name.txt"
 
 
 def usage():
