@@ -1,8 +1,10 @@
+import logging
+
 class RunOnDetection(object):
     def __init__(self, ships):
         self.ship_to_move = None
 
-    def update(self, ships, hits, scans):
+    def update(self, ships, hits, scans, my_map):
         # find main ship first if it is hit or scanned
         self.ship_to_move = None
         main_ship = locate_main_ship(ships)
@@ -25,6 +27,28 @@ class RunOnDetection(object):
             ship = locate_ship_by_ID(ships, scan["shipID"])
             if ship is not None and self.ship_to_move is None:
                 self.ship_to_move = ship
+
+        # predict danger
+        if "time space correlation" in my_map.enemy_profile:
+            main_ship_danger = 0
+            for y, x in main_ship.occupied_cells():
+                main_ship_danger += my_map[y][x].danger
+            logging.debug("Main Ship Danger: %d", main_ship_danger)
+            if main_ship_danger >= (main_ship.health / 5) and self.ship_to_move is None:
+                self.ship_to_move = main_ship
+
+            for ship in ships:
+                danger_to_ship = 0
+                for y, x in ship.occupied_cells():
+                    danger_to_ship += my_map[y][x].danger
+                if danger_to_ship >= ship.health and self.ship_to_move is None:
+                    self.ship_to_move = ship
+
+        # if main ship killer, just randomly move main ship at a low probability
+        if "mainship killer" in my_map.enemy_profile:
+            import random
+            if random.random() > 0.01 and self.ship_to_move is None:
+                self.ship_to_move = main_ship
 
         return self.ship_to_move is not None
 
