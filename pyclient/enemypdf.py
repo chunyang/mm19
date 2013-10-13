@@ -130,11 +130,8 @@ class EnemyPDF(object):
         vals = []
 
         ys = range(100)
-        random.shuffle(ys)
         xs_even = range(100)[::2]
         xs_odd = range(100)[1::2]
-        random.shuffle(xs_even)
-        random.shuffle(xs_odd)
 
         for y in ys:
             if y % 2:
@@ -146,6 +143,7 @@ class EnemyPDF(object):
                 val = self.grid[y, x]
                 vals.append((val, x, y))
 
+        random.shuffle(vals)
         return [(x[1], x[2]) for x in
                 sorted(vals, key=lambda x: -x[0])[0:num_hits]]
 
