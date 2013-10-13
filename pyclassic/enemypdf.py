@@ -130,11 +130,8 @@ class EnemyPDF(object):
         vals = []
 
         ys = range(100)
-        #random.shuffle(ys)
         xs_even = range(100)[::2]
         xs_odd = range(100)[1::2]
-        #random.shuffle(xs_even)
-        #random.shuffle(xs_odd)
 
         for y in ys:
             if y % 2:
