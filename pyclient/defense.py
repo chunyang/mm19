@@ -34,8 +34,9 @@ class RunOnDetection(object):
             for y, x in main_ship.occupied_cells():
                 main_ship_danger += my_map[y][x].danger
             logging.debug("Main Ship Danger: %d", main_ship_danger)
-            if main_ship_danger >= (main_ship.health / 5) and self.ship_to_move is None:
+            if main_ship_danger >= (main_ship.health / 4) and self.ship_to_move is None:
                 self.ship_to_move = main_ship
+                logging.debug("Move main ship")
 
             for ship in ships:
                 danger_to_ship = 0
@@ -47,7 +48,7 @@ class RunOnDetection(object):
         # if main ship killer, just randomly move main ship at a low probability
         if "mainship killer" in my_map.enemy_profile:
             import random
-            if random.random() > 0.01 and self.ship_to_move is None:
+            if random.random() < 0.01 and self.ship_to_move is None:
                 self.ship_to_move = main_ship
 
         return self.ship_to_move is not None
