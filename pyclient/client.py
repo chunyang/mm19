@@ -193,9 +193,8 @@ class Client(object):
                     self.resources -= 110
 
             # Process attack request
-            if mainship.action == "N" and self.resources >= 50:
+            if mainship.action == "N":
                 destroyers.append(mainship)
-                self.resources -= 50
 
             is_replay = np.random.random() < self.replay_rate
             if is_replay:
