@@ -134,12 +134,12 @@ class Map(object):
             x_max = min(xCoord + 5, 100)
             y_min = max(yCoord - 5, 0)
             y_max = min(yCoord + 5, 100)
-            turn_old = turn - 10
+            turn_old = turn - 8
             for y in xrange(y_max - y_min):
                 for x in xrange(x_max - x_min):
                     fired = self.__list__[y+y_min][x+x_min].fired
                     if len(fired) != 0 and fired[-1][0] >= turn_old:
-                        strong_ts_correlation += 1
+                        strong_ts_correlation += 2
 
         #reset danger
         for y in xrange(100):
