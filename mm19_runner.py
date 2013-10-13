@@ -13,7 +13,7 @@ FNULL = open(os.devnull, 'w')
 PLAYERONESTDOUT = FNULL
 path, filename = os.path.split(os.path.abspath(__file__))
 dummy_player_path = \
-    path+'/py-scan'
+    path+'/pyclassic'
 
 
 def testGame(name, run_script):
