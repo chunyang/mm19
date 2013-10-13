@@ -130,16 +130,16 @@ class Map(object):
         for hit in reply["hitReport"]:
             xCoord = hit["xCoord"]
             yCoord = hit["yCoord"]
-            x_min = max(xCoord - 5, 0)
-            x_max = min(xCoord + 5, 100)
-            y_min = max(yCoord - 5, 0)
-            y_max = min(yCoord + 5, 100)
+            x_min = max(xCoord - 6, 0)
+            x_max = min(xCoord + 6, 100)
+            y_min = max(yCoord - 6, 0)
+            y_max = min(yCoord + 6, 100)
             turn_old = turn - 8
             for y in xrange(y_max - y_min):
                 for x in xrange(x_max - x_min):
                     fired = self.__list__[y+y_min][x+x_min].fired
                     if len(fired) != 0 and fired[-1][0] >= turn_old:
-                        strong_ts_correlation += 2
+                        strong_ts_correlation += 4
 
         #reset danger
         for y in xrange(100):
@@ -148,11 +148,10 @@ class Map(object):
         for hit in reply["hitReport"]:
             xCoord = hit["xCoord"]
             yCoord = hit["yCoord"]
-            x_min = max(xCoord - 5, 0)
-            x_max = min(xCoord + 5, 100)
-            y_min = max(yCoord - 5, 0)
-            y_max = min(yCoord + 5, 100)
-            turn_old = turn - 10
+            x_min = max(xCoord - 6, 0)
+            x_max = min(xCoord + 6, 100)
+            y_min = max(yCoord - 6, 0)
+            y_max = min(yCoord + 6, 100)
             for y in xrange(y_max - y_min):
                 for x in xrange(x_max - x_min):
                     danger = max(strong_ts_correlation - min(abs(xCoord - x_min - x), abs(yCoord - y_min - y)), 1)

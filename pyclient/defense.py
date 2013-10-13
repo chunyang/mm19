@@ -48,7 +48,7 @@ class RunOnDetection(object):
         # if main ship killer, just randomly move main ship at a low probability
         if "mainship killer" in my_map.enemy_profile:
             import random
-            if random.random() < 0.01 and self.ship_to_move is None:
+            if random.random() < 0.005 and self.ship_to_move is None:
                 self.ship_to_move = main_ship
 
         return self.ship_to_move is not None

@@ -20,7 +20,7 @@ def bomber_pattern(x_low, y_low, x_high, y_high):
         while y < y_dim:
             out.append((x, y))
             y += 5
-    #random.shuffle(out)
+    random.shuffle(out)
     return out
 
 class BomberStrategy(object):
