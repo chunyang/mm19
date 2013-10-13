@@ -196,7 +196,7 @@ class Map(object):
             if turn - value > 50:
                 self.remove_from_enemy_profile(key)
 
-        logging.debug(self.enemy_profile)
+        # logging.debug(self.enemy_profile)
 
     def add_to_enemy_profile(self, name):
         if name in self.enemy_profile:

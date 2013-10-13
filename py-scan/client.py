@@ -468,7 +468,7 @@ def main():
     establish_logger(logging.DEBUG)
 
     # TODO (competitors): Change the client name, update ship positions, etc.
-    client = Client("localhost", 6969, "Cache Me if You Can")
+    client = Client("localhost", 6969, "Py-Scan")
     client.ships = generate_ships()
     #time.sleep(2)
     client.connect()

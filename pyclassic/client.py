@@ -144,7 +144,7 @@ class Client(object):
             self._process_notification(reply, turn)
 
 
-            logging.debug("===PlayerRequest===")
+            # logging.debug("===PlayerRequest===")
 
             # Step 1: Construct a turn payload
 
@@ -179,8 +179,8 @@ class Client(object):
 
                         if best_new_danger < ship_danger:
                             self.last_special = "M"
-                            logging.debug("Ship moved: %c",
-                                    ship.get_ship_type())
+                            # logging.debug("Ship moved: %c",
+                            #         ship.get_ship_type())
                             ship.move(*new_loc)
                             break
 
@@ -273,10 +273,10 @@ class Client(object):
 
             # if we have leftover destroyers, attack most probable point
             numPossibleAttacks = min(len(destroyers),self.resources/50)
-            start_time = time.time()
+            # start_time = time.time()
             coords = self.enemypdf.next_hits(numPossibleAttacks)
-            end_time = time.time()
-            logging.debug("Elapsed time was %g seconds" % (end_time - start_time))
+            # end_time = time.time()
+            # logging.debug("Elapsed time was %g seconds" % (end_time - start_time))
             for i in range(numPossibleAttacks):
                 d = destroyers.pop(0)
                 x,y = coords[i]
@@ -321,7 +321,7 @@ class Client(object):
         reply -- The reply dictionary to process
         setup (default=False) -- Whether this is a new server connection
         """
-        logging.debug("===ServerNotification===")
+        # logging.debug("===ServerNotification===")
         if setup:
             self.token = reply['playerToken']
 
@@ -335,7 +335,7 @@ class Client(object):
 
         # Response code
         # logging.debug("Response code: %d", reply['responseCode'])
-        assert(reply['responseCode']==100)
+        # assert(reply['responseCode']==100)
 
         # Resources
         if reply['resources']:
@@ -371,7 +371,7 @@ class Client(object):
         reply -- The reply dictionary to process
         setup (default=False) -- Whether this is a new server connection
         """
-        logging.debug("===ServerResponse===")
+        # logging.debug("===ServerResponse===")
         if setup:
             self.token = reply['playerToken']
 

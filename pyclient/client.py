@@ -9,7 +9,6 @@ import logging
 import random
 import socket
 import string
-import time
 
 import numpy as np
 from ship import *
@@ -144,7 +143,7 @@ class Client(object):
             self._process_notification(reply, turn)
 
 
-            logging.debug("===PlayerRequest===")
+            # logging.debug("===PlayerRequest===")
 
             # Step 1: Construct a turn payload
 
@@ -241,10 +240,7 @@ class Client(object):
 
             # if we have leftover destroyers, attack most probable point
             numPossibleAttacks = min(len(destroyers),self.resources/50)
-            start_time = time.time()
             coords = self.enemypdf.next_hits(numPossibleAttacks)
-            end_time = time.time()
-            logging.debug("Elapsed time was %g seconds" % (end_time - start_time))
             for i in range(numPossibleAttacks):
                 d = destroyers.pop(0)
                 x,y = coords[i]
@@ -289,7 +285,7 @@ class Client(object):
         reply -- The reply dictionary to process
         setup (default=False) -- Whether this is a new server connection
         """
-        logging.debug("===ServerNotification===")
+        # logging.debug("===ServerNotification===")
         if setup:
             self.token = reply['playerToken']
 
@@ -303,7 +299,7 @@ class Client(object):
 
         # Response code
         # logging.debug("Response code: %d", reply['responseCode'])
-        assert(reply['responseCode']==100)
+        # assert(reply['responseCode']==100)
 
         # Resources
         if reply['resources']:
@@ -343,7 +339,7 @@ class Client(object):
         reply -- The reply dictionary to process
         setup (default=False) -- Whether this is a new server connection
         """
-        logging.debug("===ServerResponse===")
+        # logging.debug("===ServerResponse===")
         if setup:
             self.token = reply['playerToken']
 
@@ -430,19 +426,26 @@ class Client(object):
                     #         self.attack_queue.append(AttackItem((x+1,y-1),nAttacks))
                     #     if y+1 <= MAX_Y:
                     #         self.attack_queue.append(AttackItem((x+1,y+1),nAttacks))
+                    targets = []
                     for i in range(max(x-1,MIN_X),min(x+1,MAX_X)):
                         for j in range(max(y-1,MIN_Y),min(y+1,MAX_Y)):
                             if (i==max(x-1,MIN_X)) or (i==min(x+1,MAX_X)) \
                                 or (j==max(y-1,MIN_Y)) or (j==min(y+1,MAX_Y)):
-                                self.attack_queue.append(AttackItem((i,j),nAttacks))
+                                targets.append((x,y))
+                    random.shuffle(targets)
+                    for target in targets:
+                        self.attack_queue.append(AttackItem(target,nAttacks))
 
                 if ping['distance'] <= 2:
                     # attack around the outer ring
+                    targets = []
                     for i in range(max(x-2,MIN_X),min(x+2,MAX_X)):
                         for j in range(max(y-2,MIN_Y),min(y+2,MAX_Y)):
                             if (i==max(x-2,MIN_X)) or (i==min(x+2,MAX_X)) \
                                 or (j==max(y-2,MIN_Y)) or (j==min(y+2,MAX_Y)):
-                                self.attack_queue.append(AttackItem((i,j),nAttacks))
+                                targets.append((x,y))
+                    for target in targets:
+                        self.attack_queue.append(AttackItem(target,nAttacks))
 
         # redistribute the enemy pdf
         # logging.debug("Checking last_special: %s",str(self.last_special))

@@ -33,10 +33,10 @@ class RunOnDetection(object):
             main_ship_danger = 0
             for y, x in main_ship.occupied_cells():
                 main_ship_danger += my_map[y][x].danger
-            logging.debug("Main Ship Danger: %d", main_ship_danger)
+            # logging.debug("Main Ship Danger: %d", main_ship_danger)
             if main_ship_danger >= (main_ship.health / 4) and self.ship_to_move is None:
                 self.ship_to_move = main_ship
-                logging.debug("Move main ship")
+                # logging.debug("Move main ship")
 
             for ship in ships:
                 danger_to_ship = 0
